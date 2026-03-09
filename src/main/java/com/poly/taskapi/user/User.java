@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 import jakarta.persistence.Id;
 
@@ -50,7 +51,13 @@ public class User {
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
 
-  @Column(name = "updated_at", nullable = true, unique = true)
+  @UpdateTimestamp
+  @Column(name = "updated_at")
   private Instant updatedAt;
+
+  @Column(name = "is_deleted", nullable = false)
+  private boolean isDeleted = false;
+
+
 
 }
