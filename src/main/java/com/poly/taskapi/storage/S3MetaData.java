@@ -1,10 +1,14 @@
 package com.poly.taskapi.storage;
 
+import com.poly.taskapi.todo.Todo;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
@@ -26,23 +30,27 @@ public class S3MetaData {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
-  UUID id;
+  private UUID id;
 
   @Column(name = "directory", nullable = false, updatable = true)
-  String directory;
+  private String directory;
 
   @Column(name = "file_name", nullable = false, updatable = true)
-  String fileName;
+  private String fileName;
 
-  @Column(name = "s3_key", nullable = false,updatable = false)
-  String s3Key;
+  @Column(name = "s3_key", nullable = false, updatable = false)
+  private String s3Key;
 
   @Column(name = "file_size", nullable = false)
-  Long fileSize;
+  private Long fileSize;
 
   @UpdateTimestamp
-  Instant uploadedAt;
+  private Instant uploadedAt;
 
   @Column(name = "is_deleted")
-  boolean isDeleted;
+  private boolean isDeleted;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "todo_id", nullable = false)
+  private Todo todo;
 }
