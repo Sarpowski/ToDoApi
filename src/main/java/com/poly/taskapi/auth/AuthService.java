@@ -8,7 +8,6 @@ import com.poly.taskapi.user.UserRepository;
 import com.poly.taskapi.user.dto.RegisterResponseDto;
 import com.poly.taskapi.user.storage.UserStorageService;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import com.poly.taskapi.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;

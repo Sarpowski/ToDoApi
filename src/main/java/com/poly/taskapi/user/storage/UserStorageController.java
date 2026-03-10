@@ -1,5 +1,6 @@
 package com.poly.taskapi.user.storage;
 
+import com.poly.taskapi.common.ApiVersion.ApiVersion;
 import com.poly.taskapi.common.error.ForbiddenException;
 import com.poly.taskapi.common.security.CurrentUser;
 import com.poly.taskapi.user.storage.dto.UserStorageDto;
@@ -10,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/user-storage")
+@RequestMapping(ApiVersion.V1 + "/user-storage")
 public class UserStorageController {
 
   private final UserStorageService service;
