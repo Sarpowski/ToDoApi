@@ -6,6 +6,7 @@ import com.poly.taskapi.todo.dto.CreateTodoRequestDto;
 import com.poly.taskapi.todo.dto.TodoResponseDto;
 import com.poly.taskapi.todo.dto.TodoResponsePageableDto;
 import com.poly.taskapi.todo.dto.UpdateTodoRequestDto;
+import com.poly.taskapi.todo.todoEnum.Priority;
 import jakarta.validation.Valid;
 
 import java.util.UUID;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.data.domain.Pageable;
 
@@ -65,4 +67,33 @@ public class TodoController {
     todoService.delete(todoId);
     return ResponseEntity.noContent().build();
   }
+
+
+  @GetMapping("/search")
+  public ResponseEntity<TodoResponsePageableDto> search(
+      @RequestParam String q,
+      @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+      Pageable pageable) {
+    TodoResponsePageableDto response = todoService.search(q, pageable);
+    return ResponseEntity.ok(response);
+  }
+
+  @GetMapping("/filter")
+  public ResponseEntity<TodoResponsePageableDto> filter(
+      @RequestParam(required = false) Boolean done,
+      @RequestParam(required = false) Priority priority,
+      @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+      Pageable pageable) {
+    TodoResponsePageableDto response = todoService.filter(done, priority, pageable);
+    return ResponseEntity.ok(response);
+  }
+
+  @GetMapping("/smart-list")
+  public ResponseEntity<TodoResponsePageableDto> smartList(
+      @PageableDefault(size = 10, sort = "deadline", direction = Sort.Direction.ASC)
+      Pageable pageable) {
+    TodoResponsePageableDto response = todoService.smartList(pageable);
+    return ResponseEntity.ok(response);
+  }
+
 }

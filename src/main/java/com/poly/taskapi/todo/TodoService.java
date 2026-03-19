@@ -124,6 +124,68 @@ public class TodoService {
     return true;
   }
 
+  @Transactional
+  public TodoResponsePageableDto search(String query, Pageable pageable) {
+    UUID userId = CurrentUser.requireUserId();
+
+    Page<Todo> page = todoRepository
+        .findByUserIdAndIsDeletedFalseAndTitleContainingIgnoreCase(userId, query, pageable);
+
+    return toPageableDto(page);
+  }
+
+  @Transactional
+  public TodoResponsePageableDto filter(Boolean done, Priority priority, Pageable pageable) {
+    UUID userId = CurrentUser.requireUserId();
+
+    Page<Todo> page;
+    if (done != null && priority != null) {
+      page = todoRepository.findByUserIdAndIsDeletedFalseAndDoneAndPriority(
+          userId, done, priority, pageable);
+    } else if (done != null) {
+      page = todoRepository.findByUserIdAndIsDeletedFalseAndDone(
+          userId, done, pageable);
+    } else if (priority != null) {
+      page = todoRepository.findByUserIdAndIsDeletedFalseAndPriority(
+          userId, priority, pageable);
+    } else {
+      page = todoRepository.findByUserIdAndIsDeletedFalse(userId, pageable);
+    }
+
+    return toPageableDto(page);
+  }
+
+  @Transactional
+  public TodoResponsePageableDto smartList(Pageable pageable) {
+    UUID userId = CurrentUser.requireUserId();
+
+    // Get todos with deadline before end of today (overdue + due today)
+    Instant endOfToday = Instant.now()
+        .atZone(java.time.ZoneOffset.UTC)
+        .toLocalDate()
+        .plusDays(1)
+        .atStartOfDay(java.time.ZoneOffset.UTC)
+        .toInstant();
+
+    Page<Todo> page = todoRepository
+        .findByUserIdAndIsDeletedFalseAndDoneFalseAndDeadlineBefore(
+            userId, endOfToday, pageable);
+
+    return toPageableDto(page);
+  }
+
+  // Extract this helper from findAll to avoid duplication
+  private TodoResponsePageableDto toPageableDto(Page<Todo> page) {
+    return new TodoResponsePageableDto(
+        page.getContent().stream().map(this::toDto).toList(),
+        page.getTotalPages(),
+        page.getTotalElements(),
+        page.getNumber(),
+        page.getSize()
+    );
+
+  }
+
   private TodoResponseDto toDto(Todo todo) {
     return new TodoResponseDto(
         todo.getId(),
