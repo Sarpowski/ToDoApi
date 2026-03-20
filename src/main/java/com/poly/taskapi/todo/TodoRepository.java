@@ -2,6 +2,7 @@ package com.poly.taskapi.todo;
 
 import com.poly.taskapi.todo.todoEnum.Priority;
 import java.time.Instant;
+import java.util.List;
 import org.springframework.data.domain.Pageable;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,7 +27,9 @@ public interface TodoRepository extends JpaRepository<Todo, UUID> {
   Page<Todo> findByUserIdAndIsDeletedFalseAndDoneAndPriority(
       UUID userId, boolean done, Priority priority, Pageable pageable);
 
-
   Page<Todo> findByUserIdAndIsDeletedFalseAndDoneFalseAndDeadlineBefore(
       UUID userId, Instant before, Pageable pageable);
+
+  List<Todo> findByRepeatTypeNotNullAndDoneTrueAndIsDeletedFalse();
+
 }

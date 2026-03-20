@@ -67,13 +67,7 @@ public class TodoService {
 
     Page<Todo> page = todoRepository.findByUserIdAndIsDeletedFalse(userId, pageable);
 
-    return new TodoResponsePageableDto(
-        page.getContent().stream().map(this::toDto).toList(),
-        page.getTotalPages(),
-        page.getTotalElements(),
-        page.getNumber(),
-        page.getSize()
-    );
+    return toPageableDto(page);
   }
 
   @Transactional
@@ -174,7 +168,6 @@ public class TodoService {
     return toPageableDto(page);
   }
 
-  // Extract this helper from findAll to avoid duplication
   private TodoResponsePageableDto toPageableDto(Page<Todo> page) {
     return new TodoResponsePageableDto(
         page.getContent().stream().map(this::toDto).toList(),
