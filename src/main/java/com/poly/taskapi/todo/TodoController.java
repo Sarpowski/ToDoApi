@@ -9,11 +9,13 @@ import com.poly.taskapi.todo.dto.UpdateTodoRequestDto;
 import com.poly.taskapi.todo.todoEnum.Priority;
 import jakarta.validation.Valid;
 
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,8 +25,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping(ApiVersion.V1 + "/todos")
@@ -33,10 +37,20 @@ public class TodoController {
 
   private final TodoService todoService;
 
-  @PostMapping
+  // JSON-only create (no files)
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<TodoResponseDto> create(
       @Valid @RequestBody CreateTodoRequestDto request) {
-    TodoResponseDto response = todoService.create(request);
+    TodoResponseDto response = todoService.create(request, null);
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+  }
+
+  // Multipart create (with files)
+  @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<TodoResponseDto> createWithFiles(
+      @Valid @RequestPart("todo") CreateTodoRequestDto request,
+      @RequestPart(value = "files", required = false) List<MultipartFile> files) {
+    TodoResponseDto response = todoService.create(request, files);
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
@@ -54,11 +68,22 @@ public class TodoController {
     return ResponseEntity.ok(response);
   }
 
-  @PutMapping("/{todoId}")
+  // JSON-only update
+  @PutMapping(value = "/{todoId}", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<TodoResponseDto> update(
       @PathVariable UUID todoId,
       @Valid @RequestBody UpdateTodoRequestDto request) {
-    TodoResponseDto response = todoService.update(todoId, request);
+    TodoResponseDto response = todoService.update(todoId, request, null);
+    return ResponseEntity.ok(response);
+  }
+
+  // Multipart update (with files)
+  @PutMapping(value = "/{todoId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<TodoResponseDto> updateWithFiles(
+      @PathVariable UUID todoId,
+      @Valid @RequestPart("todo") UpdateTodoRequestDto request,
+      @RequestPart(value = "files", required = false) List<MultipartFile> files) {
+    TodoResponseDto response = todoService.update(todoId, request, files);
     return ResponseEntity.ok(response);
   }
 
@@ -67,7 +92,6 @@ public class TodoController {
     todoService.delete(todoId);
     return ResponseEntity.noContent().build();
   }
-
 
   @GetMapping("/search")
   public ResponseEntity<TodoResponsePageableDto> search(
@@ -95,5 +119,4 @@ public class TodoController {
     TodoResponsePageableDto response = todoService.smartList(pageable);
     return ResponseEntity.ok(response);
   }
-
 }

@@ -3,6 +3,8 @@ package com.poly.taskapi.todo;
 import com.poly.taskapi.common.error.BadRequestException;
 import com.poly.taskapi.common.error.NotFoundException;
 import com.poly.taskapi.common.security.CurrentUser;
+import com.poly.taskapi.storage.S3MetaDataService;
+import com.poly.taskapi.storage.dto.FileResponseDto;
 import com.poly.taskapi.todo.dto.CreateTodoRequestDto;
 import com.poly.taskapi.todo.dto.TodoResponseDto;
 import com.poly.taskapi.todo.dto.TodoResponsePageableDto;
@@ -11,12 +13,14 @@ import com.poly.taskapi.todo.todoEnum.Priority;
 import com.poly.taskapi.user.User;
 import com.poly.taskapi.user.UserRepository;
 import jakarta.transaction.Transactional;
+import java.util.List;
 import org.springframework.data.domain.Pageable;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -24,9 +28,10 @@ public class TodoService {
 
   private final TodoRepository todoRepository;
   private final UserRepository userRepository;
+  private final S3MetaDataService s3MetaDataService;
 
   @Transactional
-  public TodoResponseDto create(CreateTodoRequestDto request) {
+  public TodoResponseDto create(CreateTodoRequestDto request, List<MultipartFile> files) {
     UUID userId = CurrentUser.requireUserId();
 
     User user = userRepository.findById(userId)
@@ -47,8 +52,14 @@ public class TodoService {
         .user(user)
         .build();
 
-    todo = todoRepository.saveAndFlush(todo);
-    return toDto(todo);
+    todo = todoRepository.save(todo);
+
+    List<FileResponseDto> attachments = List.of();
+    if (files != null && !files.isEmpty()) {
+      attachments = s3MetaDataService.uploadFiles(userId, todo, files);
+    }
+
+    return toDto(todo, attachments);
   }
 
   @Transactional
@@ -58,20 +69,19 @@ public class TodoService {
     Todo todo = todoRepository.findByIdAndUserIdAndIsDeletedFalse(todoId, userId)
         .orElseThrow(() -> new NotFoundException("Todo not found"));
 
-    return toDto(todo);
+    List<FileResponseDto> attachments = s3MetaDataService.getByTodoId(todoId);
+    return toDto(todo, attachments);
   }
 
   @Transactional
   public TodoResponsePageableDto findAll(Pageable pageable) {
     UUID userId = CurrentUser.requireUserId();
-
     Page<Todo> page = todoRepository.findByUserIdAndIsDeletedFalse(userId, pageable);
-
     return toPageableDto(page);
   }
 
   @Transactional
-  public TodoResponseDto update(UUID todoId, UpdateTodoRequestDto request) {
+  public TodoResponseDto update(UUID todoId, UpdateTodoRequestDto request, List<MultipartFile> files) {
     UUID userId = CurrentUser.requireUserId();
 
     Todo todo = todoRepository.findByIdAndUserIdAndIsDeletedFalse(todoId, userId)
@@ -102,8 +112,14 @@ public class TodoService {
       todo.setRepeatType(request.repeatType());
     }
 
-    todo = todoRepository.saveAndFlush(todo);
-    return toDto(todo);
+    todo = todoRepository.save(todo);
+
+    if (files != null && !files.isEmpty()) {
+      s3MetaDataService.uploadFiles(userId, todo, files);
+    }
+
+    List<FileResponseDto> attachments = s3MetaDataService.getByTodoId(todoId);
+    return toDto(todo, attachments);
   }
 
   @Transactional
@@ -113,6 +129,8 @@ public class TodoService {
     Todo todo = todoRepository.findByIdAndUserIdAndIsDeletedFalse(todoId, userId)
         .orElseThrow(() -> new NotFoundException("Todo not found"));
 
+    s3MetaDataService.deleteByTodo(userId, todoId);
+
     todo.setDeleted(true);
     todoRepository.save(todo);
     return true;
@@ -121,10 +139,8 @@ public class TodoService {
   @Transactional
   public TodoResponsePageableDto search(String query, Pageable pageable) {
     UUID userId = CurrentUser.requireUserId();
-
     Page<Todo> page = todoRepository
         .findByUserIdAndIsDeletedFalseAndTitleContainingIgnoreCase(userId, query, pageable);
-
     return toPageableDto(page);
   }
 
@@ -134,14 +150,11 @@ public class TodoService {
 
     Page<Todo> page;
     if (done != null && priority != null) {
-      page = todoRepository.findByUserIdAndIsDeletedFalseAndDoneAndPriority(
-          userId, done, priority, pageable);
+      page = todoRepository.findByUserIdAndIsDeletedFalseAndDoneAndPriority(userId, done, priority, pageable);
     } else if (done != null) {
-      page = todoRepository.findByUserIdAndIsDeletedFalseAndDone(
-          userId, done, pageable);
+      page = todoRepository.findByUserIdAndIsDeletedFalseAndDone(userId, done, pageable);
     } else if (priority != null) {
-      page = todoRepository.findByUserIdAndIsDeletedFalseAndPriority(
-          userId, priority, pageable);
+      page = todoRepository.findByUserIdAndIsDeletedFalseAndPriority(userId, priority, pageable);
     } else {
       page = todoRepository.findByUserIdAndIsDeletedFalse(userId, pageable);
     }
@@ -153,7 +166,6 @@ public class TodoService {
   public TodoResponsePageableDto smartList(Pageable pageable) {
     UUID userId = CurrentUser.requireUserId();
 
-    // Get todos with deadline before end of today (overdue + due today)
     Instant endOfToday = Instant.now()
         .atZone(java.time.ZoneOffset.UTC)
         .toLocalDate()
@@ -162,24 +174,22 @@ public class TodoService {
         .toInstant();
 
     Page<Todo> page = todoRepository
-        .findByUserIdAndIsDeletedFalseAndDoneFalseAndDeadlineBefore(
-            userId, endOfToday, pageable);
+        .findByUserIdAndIsDeletedFalseAndDoneFalseAndDeadlineBefore(userId, endOfToday, pageable);
 
     return toPageableDto(page);
   }
 
   private TodoResponsePageableDto toPageableDto(Page<Todo> page) {
     return new TodoResponsePageableDto(
-        page.getContent().stream().map(this::toDto).toList(),
+        page.getContent().stream().map(t -> toDto(t, s3MetaDataService.getByTodoId(t.getId()))).toList(),
         page.getTotalPages(),
         page.getTotalElements(),
         page.getNumber(),
         page.getSize()
     );
-
   }
 
-  private TodoResponseDto toDto(Todo todo) {
+  private TodoResponseDto toDto(Todo todo, List<FileResponseDto> attachments) {
     return new TodoResponseDto(
         todo.getId(),
         todo.getTitle(),
@@ -189,6 +199,7 @@ public class TodoService {
         todo.getPriority(),
         todo.getRepeatType(),
         todo.getUser().getId(),
+        attachments,
         todo.getCreatedAt(),
         todo.getUpdatedAt()
     );
