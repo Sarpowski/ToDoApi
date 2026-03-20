@@ -47,7 +47,7 @@ public class TodoService {
         .user(user)
         .build();
 
-    todo = todoRepository.save(todo);
+    todo = todoRepository.saveAndFlush(todo);
     return toDto(todo);
   }
 
@@ -108,7 +108,7 @@ public class TodoService {
       todo.setRepeatType(request.repeatType());
     }
 
-    todo = todoRepository.save(todo);
+    todo = todoRepository.saveAndFlush(todo);
     return toDto(todo);
   }
 
