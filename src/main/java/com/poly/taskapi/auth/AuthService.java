@@ -40,7 +40,7 @@ public class AuthService {
     user.setFirstName(request.firstName());
     user.setLastName(request.lastName());
 
-    user = userRepository.save(user);
+    user = userRepository.saveAndFlush(user);
 
     userStorageService.initializeForUser(user.getId());
 
