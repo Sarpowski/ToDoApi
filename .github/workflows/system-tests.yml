@@ -55,5 +55,8 @@ jobs:
           ./mc alias set local http://localhost:9000 minioadmin minioadmin
           ./mc mb --ignore-existing local/taskapi
 
+      - name: Make Gradle executable
+        run: chmod +x gradlew
+
       - name: Run tests
         run: ./gradlew test
