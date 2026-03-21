@@ -22,6 +22,22 @@ public class GlobalExceptionHandler {
     return toResponse(ex.getStatus(), ex.getMessage(), request.getRequestURI(), null);
   }
 
+
+  @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+  public ResponseEntity<ApiError> handleHttpMessageNotReadable(
+      org.springframework.http.converter.HttpMessageNotReadableException ex,
+      HttpServletRequest request) {
+    return toResponse(HttpStatus.BAD_REQUEST, "Malformed request body", request.getRequestURI(), null);
+  }
+
+
+  @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+  public ResponseEntity<ApiError> handleDataIntegrity(
+      org.springframework.dao.DataIntegrityViolationException ex,
+      HttpServletRequest request) {
+    return toResponse(HttpStatus.CONFLICT, "Data integrity violation", request.getRequestURI(), null);
+  }
+
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ApiError> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
       HttpServletRequest request) {
