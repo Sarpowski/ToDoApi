@@ -44,7 +44,8 @@ dependencies {
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'org.postgresql:postgresql'
-
+    implementation 'org.springframework.boot:spring-boot-starter-jackson'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'com.h2database:h2'

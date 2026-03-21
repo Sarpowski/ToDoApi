@@ -94,8 +94,7 @@ class AuthControllerTest extends BaseIntegrationTest {
     @DisplayName("6. Should return 400 for missing email")
     void registerMissingEmail() throws Exception {
       String body = """
- {"username":"%s","password":"%s","f
- d":"%s","firstName":"A","lastName":"B"}
+          {"username":"%s","password":"%s","firstName":"A","lastName":"B"}
           """.formatted(uniqueUsername(), VALID_PASSWORD);
       mockMvc.perform(post(BASE_URL + "/auth/register")
               .contentType(MediaType.APPLICATION_JSON).content(body))
