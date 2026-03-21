@@ -35,7 +35,6 @@ public class S3Config {
         .serviceConfiguration(S3Configuration.builder()
             .pathStyleAccessEnabled(true)
             .build())
-        .forcePathStyle(true)
         .build();
   }
 }
