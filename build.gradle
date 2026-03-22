@@ -72,6 +72,8 @@ tasks.register('integrationTest', Test) {
     }
     description = 'Runs integration tests'
     group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
 }
 
 // All tests together
@@ -81,8 +83,11 @@ tasks.register('allTests', Test) {
     }
     description = 'Runs all tests'
     group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
     finalizedBy 'jacocoAllTestsReport'
 }
+
 
 // JaCoCo reports
 jacocoTestReport {
