@@ -57,8 +57,34 @@ jacoco {
     toolVersion = "0.8.12"
 }
 
+// Unit tests only
+tasks.named('test') {
+    useJUnitPlatform {
+        includeTags 'unit'
+    }
+    finalizedBy jacocoTestReport
+}
 
+// Integration tests
+tasks.register('integrationTest', Test) {
+    useJUnitPlatform {
+        includeTags 'integration'
+    }
+    description = 'Runs integration tests'
+    group = 'verification'
+}
 
+// All tests together
+tasks.register('allTests', Test) {
+    useJUnitPlatform {
+        includeTags 'unit', 'integration'
+    }
+    description = 'Runs all tests'
+    group = 'verification'
+    finalizedBy 'jacocoAllTestsReport'
+}
+
+// JaCoCo reports
 jacocoTestReport {
     dependsOn test
     reports {
@@ -67,18 +93,34 @@ jacocoTestReport {
     }
 }
 
+tasks.register('jacocoIntegrationReport', JacocoReport) {
+    dependsOn integrationTest
+    executionData integrationTest
+    sourceSets sourceSets.main
+    reports {
+        xml.required = true
+        html.required = true
+        html.outputLocation = layout.buildDirectory.dir('reports/jacoco/integration')
+    }
+}
+
+tasks.register('jacocoAllTestsReport', JacocoReport) {
+    dependsOn allTests
+    executionData allTests
+    sourceSets sourceSets.main
+    reports {
+        xml.required = true
+        html.required = true
+        html.outputLocation = layout.buildDirectory.dir('reports/jacoco/all')
+    }
+}
+
 jacocoTestCoverageVerification {
     violationRules {
         rule {
             limit {
-                minimum = 0.80 // 80% minimum coverage
+                minimum = 0.80
             }
         }
     }
-}
-
-tasks.named('test') {
-    useJUnitPlatform()
-    finalizedBy jacocoTestReport
-
 }

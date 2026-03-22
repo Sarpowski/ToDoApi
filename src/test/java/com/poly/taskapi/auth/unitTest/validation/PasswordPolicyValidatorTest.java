@@ -4,12 +4,15 @@ import com.poly.taskapi.auth.validation.PasswordPolicyValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.*;
 
+
+@Tag("unit")
 class PasswordPolicyValidatorTest {
 
     private PasswordPolicyValidator validator;

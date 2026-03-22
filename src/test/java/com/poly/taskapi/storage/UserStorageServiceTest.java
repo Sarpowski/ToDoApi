@@ -8,6 +8,7 @@ import com.poly.taskapi.user.storage.UserStorageService;
 import com.poly.taskapi.user.storage.dto.UserStorageDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -22,6 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@Tag("integration")
 class UserStorageServiceTest {
 
     private final UserStorageRepository repository = mock(UserStorageRepository.class);
