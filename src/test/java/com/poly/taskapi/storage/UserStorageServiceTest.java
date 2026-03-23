@@ -23,7 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@Tag("integration")
+@Tag("unit")
 class UserStorageServiceTest {
 
     private final UserStorageRepository repository = mock(UserStorageRepository.class);

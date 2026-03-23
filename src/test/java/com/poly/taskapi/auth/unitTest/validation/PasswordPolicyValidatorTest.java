@@ -11,7 +11,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.*;
 
-
 @Tag("unit")
 class PasswordPolicyValidatorTest {
 
@@ -51,11 +50,7 @@ class PasswordPolicyValidatorTest {
     class TooShort {
 
         @ParameterizedTest
-        @ValueSource(strings = {
-            "Ab1!xyz",
-            "Ab1!",
-            "A1!",
-        })
+        @ValueSource(strings = {"Ab1!xyz", "Ab1!", "A1!"})
         @DisplayName("Should reject passwords shorter than 8 characters")
         void tooShort(String password) {
             assertThat(validator.isValid(password, null)).isFalse();
@@ -66,17 +61,13 @@ class PasswordPolicyValidatorTest {
     @DisplayName("Invalid passwords: too long")
     class TooLong {
 
-        @Test
-        @DisplayName("Should reject password with 21 characters")
-        void tooLong21() {
-            String password = "Ab1!xyzAbcDefGhiJklMn"; // 21 chars
-            assertThat(validator.isValid(password, null)).isFalse();
-        }
-
-        @Test
-        @DisplayName("Should reject password with 30 characters")
-        void tooLong30() {
-            String password = "Ab1!" + "a".repeat(26);
+        @ParameterizedTest
+        @ValueSource(strings = {
+            "Ab1!xyzAbcDefGhiJklMn",
+            "Ab1!aaaaaaaaaaaaaaaaaaaaaaaaaa",
+        })
+        @DisplayName("Should reject passwords longer than 20 characters")
+        void tooLong(String password) {
             assertThat(validator.isValid(password, null)).isFalse();
         }
     }
@@ -85,28 +76,17 @@ class PasswordPolicyValidatorTest {
     @DisplayName("Invalid passwords: missing character types")
     class MissingCharTypes {
 
-        @Test
-        @DisplayName("Should reject password without uppercase")
-        void noUppercase() {
-            assertThat(validator.isValid("test123!@", null)).isFalse();
-        }
-
-        @Test
-        @DisplayName("Should reject password without lowercase")
-        void noLowercase() {
-            assertThat(validator.isValid("TEST123!@", null)).isFalse();
-        }
-
-        @Test
-        @DisplayName("Should reject password without digit")
-        void noDigit() {
-            assertThat(validator.isValid("TestPass!@", null)).isFalse();
-        }
-
-        @Test
-        @DisplayName("Should reject password without special character")
-        void noSpecialChar() {
-            assertThat(validator.isValid("TestPass123", null)).isFalse();
+        @ParameterizedTest
+        @ValueSource(strings = {
+            "test123!@",
+            "TEST123!@",
+            "TestPass!@",
+            "TestPass123",
+            "ABC321456",
+        })
+        @DisplayName("Should reject passwords missing a required character type")
+        void missingCharType(String password) {
+            assertThat(validator.isValid(password, null)).isFalse();
         }
     }
 
@@ -114,21 +94,16 @@ class PasswordPolicyValidatorTest {
     @DisplayName("Invalid passwords: whitespace")
     class Whitespace {
 
-        @Test
-        @DisplayName("Should reject password with space")
-        void withSpace() {
-            assertThat(validator.isValid("Test 123!@", null)).isFalse();
-        }
-
-        @Test
-        @DisplayName("Should reject password with tab")
-        void withTab() {
-            assertThat(validator.isValid("Test\t123!@", null)).isFalse();
+        @ParameterizedTest
+        @ValueSource(strings = {"Test 123!@", "Test\t123!@"})
+        @DisplayName("Should reject passwords containing whitespace")
+        void withWhitespace(String password) {
+            assertThat(validator.isValid(password, null)).isFalse();
         }
     }
 
     @Nested
-    @DisplayName("Boundary: exactly 8 and 20 characters")
+    @DisplayName("Boundary lengths")
     class BoundaryLengths {
 
         @Test
