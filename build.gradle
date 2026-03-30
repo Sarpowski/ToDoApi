@@ -74,6 +74,26 @@ tasks.register('integrationTest', Test) {
     group = 'verification'
     testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
+
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+        showExceptions true
+        showCauses true
+        showStackTraces true
+    }
+
+    afterSuite { desc, result ->
+        if (!desc.parent) {
+            println "\n=========================================="
+            println " TEST RESULTS: ${result.resultType}"
+            println " Total: ${result.testCount}"
+            println " Passed: ${result.successfulTestCount}"
+            println " Failed: ${result.failedTestCount}"
+            println " Skipped: ${result.skippedTestCount}"
+            println "==========================================\n"
+        }
+    }
 }
 
 // All tests together

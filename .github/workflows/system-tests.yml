@@ -59,4 +59,4 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run tests
-        run: ./gradlew integrationTest --info
+        run: ./gradlew integrationTest --console=plain
